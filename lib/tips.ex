@@ -4,10 +4,6 @@ defimpl_ex Nil, Nil, for: Tip.Check do
   def check(_, x), do: is_nil(x)
 end
 
-defimpl_ex Nil, nil, for: Tip.Check do
-  def check(_, x), do: is_nil(x)
-end
-
 defimpl_ex Truthy, Truthy, for: Tip.Check do
   def check(_, x), do: not (is_nil(x) or not x)
 end
@@ -24,6 +20,14 @@ defimpl_ex Tuple.Sized, {Tuple, n} when is_integer(n) and n >= 0, for: Tip.Check
   def check({_, size}, x), do: is_tuple(x) and tuple_size(x) == size
 end
 
+defimpl_ex Tuple.Of, {Tuple, of} when is_list(of), for: Tip.Check do
+  def check({_, of}, x), do: is_tuple(x) and check2(of, Tuple.to_list(x))
+
+  defp check2([],[]), do: true
+  defp check2([x | xs], [y | ys]), do: Tip.Check.check(x, y) and check2(xs, ys)
+  defp check2(_,_), do: false
+end
+
 defimpl_ex Atom, Atom, for: Tip.Check do
   def check(_, x), do: is_atom(x)
 end
@@ -32,7 +36,7 @@ defimpl_ex List, List, for: Tip.Check do
   def check(_, x), do: is_list(x)
 end
 
-defimpl_ex List, {List, of}, for: Tip.Check do
+defimpl_ex List.Of, {List, of}, for: Tip.Check do
   def check({_, of}, x), do: is_list(x) and Enum.all?(x, &Tip.Check.check(of, &1))
 end
 
