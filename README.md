@@ -9,7 +9,7 @@ New, probably buggy, has no tests.
 ## Usage
 
 ```elixir
-use Tip # or require Tip; import Tip
+import Tip
 
 def greet(name) do
   # Will typecheck when the Mix env is dev or test
