@@ -58,36 +58,67 @@ defmodule Tip do
   if Code.ensure_loaded?(ProtocolEx) do
 
     @spec check(type :: term, data :: term) :: {:ok, data :: term} | {:error, Tip.Error.t}
-    def check(type, data) do
-      if Tip.Check.check(type, data),
-        do: {:ok, data},
-        else: {:error, Tip.Error.exception(type: type, data: data)}
+    defmacro check(type, data) do
+      caller = caller_info(__CALLER__)
+      quote do
+        Tip.check(unquote(type), unquote(data), unquote(caller))
+      end
     end
 
-    @spec check!(type :: term, data :: term) :: (data :: term)
-    def check!(type, data) do
+    @spec check!(type :: term, data :: term) :: term
+    defmacro check!(type, data) do
+      caller = caller_info(__CALLER__)
+      quote do
+        Tip.check!(unquote(type), unquote(data), unquote(caller))
+      end
+    end
+
+    @doc false
+    def check(type, data, caller) do
+      if Tip.Check.check(type, data),
+        do: {:ok, data},
+        else: {:error, Tip.Error.exception(type: type, data: data, env: caller)}
+    end
+
+    @doc false
+    def check!(type, data, caller) do
       if Tip.Check.check(type, data),
         do: data,
-        else: raise Tip.Error, type: type, data: data
+        else: raise Tip.Error, [type: type, data: data, env: caller]
     end
 
     @doc """
-    In development or test, asserts that the data matches the type,
-    returning the data. In production, return the data.
+    A config-disable-able type assertion that matches the type and
+    data, returning the data.
 
     The name is taken from Idris, if you were wondering
     """
-    defmacro the(type, data)
-
-    if Mix.env in [:dev, :test] do
-      defmacro the(type, data) do
-        quote do
-          Tip.check!(unquote(type), unquote(data))
-        end
+    @spec the(type :: term, data :: term) :: (data :: term)
+    defmacro the(type, data) do
+      caller = caller_info(__CALLER__)
+      quote do
+        Tip.the(unquote(type), unquote(data), unquote(caller))
       end
-    else
-      defmacro the(_, data), do: data
     end
+
+
+    @doc false
+    def the(type, data, env) do
+      if Application.get_env(Tip, :enabled, false),
+        do: Tip.check!(type, data, env),
+        else: data
+    end
+
+    defp caller_info(caller) do
+      quote do
+        %{ module: unquote(caller.module),
+           function: unquote(caller.function),
+           file: unquote(caller.file),
+           line: unquote(caller.line) }
+      end
+    end
+
   end
+
 
 end
