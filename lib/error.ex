@@ -12,7 +12,7 @@ defmodule Tip.Error do
     Got data: #{inspect(data)}
     """
   end
-    
+
   defp module(%{module: nil}), do: "(no module)"
   defp module(%{module: m}), do: inspect(m)
 
@@ -24,5 +24,4 @@ defmodule Tip.Error do
 
   defp line(%{line: nil}), do: ""
   defp line(%{line: line}), do: ":#{line}"
-
 end

@@ -41,7 +41,8 @@ defimpl_ex List, List, for: Tip.Check do
 end
 
 defimpl_ex List.Of, {List, of}, for: Tip.Check do
-  def check({_, of}, x), do: is_list(x) and Enum.all?(x, &Tip.Check.check(of, &1))
+  def check({_, of}, x),
+    do: is_list(x) and Enum.all?(x, &Tip.Check.check(of, &1))
 end
 
 defimpl_ex Map, Map, for: Tip.Check do
@@ -51,8 +52,10 @@ end
 defimpl_ex Map.Of, {Map, k, v}, for: Tip.Check do
   def check({_, k, v}, x) do
     is_map(x) and
-    not is_map_key(x, :__struct__) and
-    Enum.all?(x, fn {k2, v2} -> Tip.Check.check(k, k2) and Tip.Check.check(v, v2) end)
+      not is_map_key(x, :__struct__) and
+      Enum.all?(x, fn {k2, v2} ->
+        Tip.Check.check(k, k2) and Tip.Check.check(v, v2)
+      end)
   end
 end
 
@@ -84,12 +87,11 @@ end
 defimpl_ex Tuple.Of, {Tuple, of} when is_list(of), for: Tip.Check do
   def check({_, of}, x), do: is_tuple(x) and check2(of, Tuple.to_list(x))
 
-  defp check2([],[]), do: true
+  defp check2([], []), do: true
   defp check2([x | xs], [y | ys]), do: Tip.Check.check(x, y) and check2(xs, ys)
-  defp check2(_,_), do: false
+  defp check2(_, _), do: false
 end
 
 defimpl_ex Tuple.Sized, {Tuple, n} when is_integer(n) and n >= 0, for: Tip.Check do
   def check({_, size}, x), do: is_tuple(x) and tuple_size(x) == size
 end
-

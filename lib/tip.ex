@@ -56,10 +56,11 @@ defmodule Tip do
   def prototype(_), do: Any
 
   if Code.ensure_loaded?(ProtocolEx) do
-
-    @spec check(type :: term, data :: term) :: {:ok, data :: term} | {:error, Tip.Error.t}
+    @spec check(type :: term, data :: term) ::
+            {:ok, data :: term} | {:error, Tip.Error.t()}
     defmacro check(type, data) do
       caller = caller_info(__CALLER__)
+
       quote do
         Tip.check(unquote(type), unquote(data), unquote(caller))
       end
@@ -68,6 +69,7 @@ defmodule Tip do
     @spec check!(type :: term, data :: term) :: term
     defmacro check!(type, data) do
       caller = caller_info(__CALLER__)
+
       quote do
         Tip.check!(unquote(type), unquote(data), unquote(caller))
       end
@@ -84,7 +86,7 @@ defmodule Tip do
     def check!(type, data, caller) do
       if Tip.Check.check(type, data),
         do: data,
-        else: raise Tip.Error, [type: type, data: data, env: caller]
+        else: raise(Tip.Error, type: type, data: data, env: caller)
     end
 
     @doc """
@@ -93,14 +95,14 @@ defmodule Tip do
 
     The name is taken from Idris, if you were wondering
     """
-    @spec the(type :: term, data :: term) :: (data :: term)
+    @spec the(type :: term, data :: term) :: data :: term
     defmacro the(type, data) do
       caller = caller_info(__CALLER__)
+
       quote do
         Tip.the(unquote(type), unquote(data), unquote(caller))
       end
     end
-
 
     @doc false
     def the(type, data, env) do
@@ -111,14 +113,13 @@ defmodule Tip do
 
     defp caller_info(caller) do
       quote do
-        %{ module: unquote(caller.module),
-           function: unquote(caller.function),
-           file: unquote(caller.file),
-           line: unquote(caller.line) }
+        %{
+          module: unquote(caller.module),
+          function: unquote(caller.function),
+          file: unquote(caller.file),
+          line: unquote(caller.line)
+        }
       end
     end
-
   end
-
-
 end
